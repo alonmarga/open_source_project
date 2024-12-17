@@ -1,0 +1,116 @@
+services:
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./postgres/init_scripts:/docker-entrypoint-initdb.d
+    ports:
+      - "5432:5432"
+    networks:
+      - project_network
+    restart: always
+
+  redis:
+    image: redis:7
+    command: ["redis-server", "--requirepass", "redis_pass"]
+    environment:
+      REDIS_PASSWORD: redis_pass
+    ports:
+      - "6379:6379"
+    networks:
+      - project_network
+    restart: always
+
+  airflow-init:
+    build: ./airflow
+    depends_on:
+      - postgres
+      - redis
+    environment:
+      AIRFLOW_UID: ${AIRFLOW_UID}
+      AIRFLOW_GID: ${AIRFLOW_GID}
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      AIRFLOW__CELERY__BROKER_URL: redis://redis:6379/0
+      AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+    networks:
+      - project_network
+    command: ["airflow", "db", "upgrade"]
+
+  airflow-webserver:
+    build: ./airflow
+    depends_on:
+      - airflow-init
+    ports:
+      - "8080:8080"
+    environment:
+      AIRFLOW__WEBSERVER__WORKERS: 2
+    networks:
+      - project_network
+    restart: always
+    command: ["airflow", "webserver"]
+
+  spark-master:
+    build: ./spark/master
+    environment:
+      SPARK_MODE: master
+      SPARK_MASTER_PORT: 7077
+      SPARK_MASTER_WEBUI_PORT: 8081
+    ports:
+      - "7077:7077"
+      - "8081:8081"
+    networks:
+      - project_network
+    restart: always
+
+  spark-worker:
+    build: ./spark/worker
+    environment:
+      SPARK_MODE: worker
+      SPARK_MASTER_URL: spark://spark-master:7077
+      SPARK_WORKER_CORES: 1
+      SPARK_WORKER_MEMORY: 1G
+    depends_on:
+      - spark-master
+    ports:
+      - "8082:8082"
+    networks:
+      - project_network
+    restart: always
+
+  fastapi-app:
+    build: ./fastapi_app
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+    depends_on:
+      - postgres
+    networks:
+      - project_network
+    restart: always
+
+  telegram-bot:
+    build: ./telegram_bot
+    environment:
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    depends_on:
+      - postgres
+    networks:
+      - project_network
+    restart: always
+
+volumes:
+  postgres_data:
+
+networks:
+  project_network:
+    driver: bridge
