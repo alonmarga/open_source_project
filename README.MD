@@ -1,3 +1,4 @@
+```
 project/
 ├── docker-compose.yml       # Main orchestration file
 ├── .env                     # Environment variables for services
@@ -32,3 +33,4 @@ project/
     ├── requirements.txt     # Python dependencies for the bot
     └── bot/
         └── bot.py           # Telegram bot implementation
+```
