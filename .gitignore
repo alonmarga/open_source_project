@@ -99,3 +99,6 @@ desktop.ini
 # Secrets
 *.pem
 *.key
+
+project_struct.py
+postgres/data/
