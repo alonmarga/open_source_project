@@ -2,8 +2,11 @@ from sqlalchemy import create_engine
 from contextlib import contextmanager
 import os
 from sqlalchemy.sql import text
+from dotenv import load_dotenv
 
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://myuser:mypassword@postgres:5432/mydatabase")
+load_dotenv()
+
+DATABASE_URL = os.environ.get("DATABASE_URL")
 
 # Create the database engine
 engine = create_engine(DATABASE_URL)

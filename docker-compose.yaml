@@ -35,4 +35,4 @@ services:
 #    depends_on:
 #      - postgres
 #    volumes:
-#      - ./bot:/bot  # Mount the bot source code for live reload
+#      - ./bot:/opt/bot  # Mount the bot source code for live reload
