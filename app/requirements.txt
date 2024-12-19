@@ -3,3 +3,5 @@ uvicorn
 sqlalchemy
 asyncpg
 python-dotenv
+fastapi_offline
+psycopg2-binary

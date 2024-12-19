@@ -1,7 +1,11 @@
-from routers.routers import setup_routers  # Import setup_routers from the routers/routers.py file
+import fastapi
+from fastapi_offline import FastAPIOffline
+from app.routers import api_router  # Import the centralized router
 
-from fastapi import FastAPI
+app = FastAPIOffline(title ='test')
 
-app = FastAPI()
+# Include the API router
+api = fastapi.APIRouter()
+app.include_router(api_router)
 
-setup_routers(app)
+
