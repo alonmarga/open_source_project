@@ -1,7 +1,7 @@
 from sqlalchemy import create_engine
-from sqlalchemy.exc import SQLAlchemyError
 from contextlib import contextmanager
 import os
+from sqlalchemy.sql import text
 
 DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://myuser:mypassword@postgres:5432/mydatabase")
 
@@ -19,6 +19,8 @@ def get_connection():
     finally:
         connection.close()
 
+
+
 def query(sql: str, parameters: dict = None, fetchone: bool = False):
     """
     Helper function to execute a SQL query.
@@ -32,8 +34,8 @@ def query(sql: str, parameters: dict = None, fetchone: bool = False):
         list | dict: Query results as a list of dictionaries or a single dictionary.
     """
     with get_connection() as conn:
-        result = conn.execute(sql, parameters or {})
+        result = conn.execute(text(sql), parameters or {})
         if fetchone:
             row = result.fetchone()
-            return dict(row) if row else None
-        return [dict(row) for row in result.fetchall()]
+            return dict(row._mapping) if row else None
+        return [dict(row._mapping) for row in result.fetchall()]

@@ -13,10 +13,10 @@ def test_route():
     return "it"
 
 
-# @router.get("/itemss")
-# def get_users():
-#     """
-#     Fetch all users from the database.
-#     """
-#     sql = "SELECT id, username, email FROM users"
-#     return query(sql)
+@router.get("/itemss")
+def get_users():
+    """
+    Fetch all users from the database.
+    """
+    sql = "SELECT * FROM users;"
+    return query(sql)
