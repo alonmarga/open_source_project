@@ -1,18 +1,17 @@
-# Use a lightweight Python image
+# Use Python image
 FROM python:3.11-slim
 
-# Set the working directory
-WORKDIR /opt
+# Set working directory
+WORKDIR /opt/bot
 
-# Copy both app and bot folders into the container
-COPY ./app /app
-COPY ./bot /bot
+# Copy bot source code into the container
+COPY . /opt/bot
 
-# Install dependencies
-RUN pip install --no-cache-dir -r /bot/requirements.txt -r /app/requirements.txt
+# Install dependencies from requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Set PYTHONPATH to allow bot to access app
-ENV PYTHONPATH="/:/app"
+# Ensure the app folder is included in PYTHONPATH
+ENV PYTHONPATH="/opt/app"
 
 # Run the bot
 CMD ["python", "main.py"]

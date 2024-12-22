@@ -27,12 +27,18 @@ services:
     volumes:
       - ./app:/opt/app  # Mount the source code for live reload
 
-#  telegram-bot:
-#    build:
-#      context: ./bot
-#    container_name: telegram-bot
-#    env_file: .env
-#    depends_on:
-#      - postgres
-#    volumes:
-#      - ./bot:/opt/bot  # Mount the bot source code for live reload
+  telegram-bot:
+    build:
+      context: ./bot  # Restrict build context to bot directory
+      dockerfile: Dockerfile
+    container_name: telegram-bot
+    env_file: .env
+    depends_on:
+      - postgres
+      - fastapi
+    volumes:
+      - ./bot:/opt/bot  # Bot source code
+      - ./app:/opt/app  # App source code (shared utilities)
+    command: ["python", "/opt/bot/main.py"]
+
+
