@@ -1,23 +1,51 @@
 from dotenv import load_dotenv
-from handlers.start import start, test  # Import handlers
+from fastapi import FastAPI, Request
+from telegram import Update
+from telegram.ext import Application, CommandHandler
 import os
-from telegram.ext import Application, CommandHandler, Updater
+import logging
+from handlers.start import start, test,test2
 
 load_dotenv()
 
-BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
+BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 
-# Main function
-def main():
-    # Create the application
-    print(BOT_TOKEN)
-    application = Application.builder().token(BOT_TOKEN).build()
+# Configure logging
+logging.basicConfig(
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    level=logging.INFO
+)
+logger = logging.getLogger(__name__)
 
-    # Register handlers
-    application.add_handler(CommandHandler("start", start))
-    application.add_handler(CommandHandler("test",test))
-    # Start the bot
-    application.run_polling()
+# Define FastAPI app
+app = FastAPI()
 
-if __name__ == "__main__":
-    main()
+# Initialize Telegram application
+if not BOT_TOKEN:
+    raise ValueError("TELEGRAM_BOT_TOKEN is not set!")
+
+application = Application.builder().token(BOT_TOKEN).build()
+
+# Initialize the bot
+@app.on_event("startup")
+async def startup_event():
+    logger.info("Initializing Telegram bot...")
+    await application.initialize()  # חשוב לאתחל את הבוט בזמן הפעלת היישום
+
+
+
+# Add bot command handlers
+application.add_handler(CommandHandler("start", start))
+application.add_handler(CommandHandler("test", test))
+application.add_handler(CommandHandler("test", test2))
+
+# Webhook endpoint for Telegram
+@app.post(f"/{BOT_TOKEN}")
+async def telegram_webhook(request: Request):
+    try:
+        data = await request.json()
+        update = Update.de_json(data, application.bot)
+        await application.process_update(update)
+    except Exception as e:
+        logger.error(f"Error processing update: {e}")
+    return {"ok": True}

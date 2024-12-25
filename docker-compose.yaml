@@ -29,16 +29,13 @@ services:
 
   telegram-bot:
     build:
-      context: ./bot  # Restrict build context to bot directory
-      dockerfile: Dockerfile
+      context: ./bot
     container_name: telegram-bot
     env_file: .env
-    depends_on:
-      - postgres
-      - fastapi
     volumes:
-      - ./bot:/opt/bot  # Bot source code
-      - ./app:/opt/app  # App source code (shared utilities)
-    command: ["python", "/opt/bot/main.py"]
-
-
+      - ./bot:/opt/bot
+    ports:
+      - "8001:8001"
+    depends_on:
+      - fastapi
+    command: /bin/bash -c "/opt/bot/setup_webhook.sh && uvicorn main:app --host 0.0.0.0 --port 8001 --reload"

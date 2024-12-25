@@ -7,4 +7,7 @@ async def start(update, context):
 
 
 async def test(update, context):
-    await update.message.reply_text("test! I'm your test Telegram bot!")
+    await update.message.reply_text("test! I'm your test Telegram bot1111111111111!")
+
+async def test2(update, context):
+        await update.message.reply_text("test222! I'm your test Telegram bot!")
