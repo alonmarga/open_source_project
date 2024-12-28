@@ -20,6 +20,9 @@ RUN curl -s https://ngrok-agent.s3.amazonaws.com/ngrok.asc | tee /etc/apt/truste
 COPY setup_webhook.sh /opt/bot/setup_webhook.sh
 RUN chmod +x /opt/bot/setup_webhook.sh
 
+# Set PYTHONPATH to include the app folder
+ENV PYTHONPATH="/opt:/opt/app:/opt/bot"
+
 # Expose port for FastAPI
 EXPOSE 8001
 

@@ -34,6 +34,7 @@ services:
     env_file: .env
     volumes:
       - ./bot:/opt/bot
+      - ./app:/opt/app  # Mount app folder
     ports:
       - "8001:8001"
     depends_on:
