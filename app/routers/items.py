@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from app.db import query
+from app.db import query_db
 
 router = APIRouter()
 
@@ -19,4 +19,4 @@ def get_users():
     Fetch all users from the database.
     """
     sql = "SELECT * FROM users;"
-    return query(sql)
+    return query_db(sql)
