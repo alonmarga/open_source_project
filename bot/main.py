@@ -15,9 +15,8 @@ from handlers.manage_users import (
     handle_admin_approval,
     handle_admin_code_submission
 )
-from handlers.user_actions import (
-    user_action, manage_users, show_table_columns, execute_query, handle_filter_input
-)
+from handlers.views import view_tables, display_table, display_table_in_format
+from handlers.edit import edit_tables, select_action, perform_action, handle_input
 
 
 load_dotenv()
@@ -53,12 +52,17 @@ application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_r
 # אחר כך האדמין
 application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_admin_code_submission), group=1)
 
+application.add_handler(CommandHandler("view", view_tables))
+application.add_handler(CallbackQueryHandler(display_table, pattern="^view_table_"))
+application.add_handler(CallbackQueryHandler(display_table_in_format, pattern="^format_"))
 
-application.add_handler(CommandHandler("user_action", user_action))
-application.add_handler(CallbackQueryHandler(manage_users, pattern="^action_ניהול משתמשים$"))
-application.add_handler(CallbackQueryHandler(show_table_columns, pattern="^table_"))
-application.add_handler(CallbackQueryHandler(execute_query, pattern="^filter_(yes|no)$"))
-application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_filter_input),group=2)
+application.add_handler(CommandHandler("edit", edit_tables))
+application.add_handler(CallbackQueryHandler(select_action, pattern="^edit_table_"))
+application.add_handler(CallbackQueryHandler(perform_action, pattern="^action_"))
+application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_input))
+application.add_handler(CallbackQueryHandler(edit_tables, pattern="^back_to_tables$"))
+
+
 
 @app.post(f"/{BOT_TOKEN}")
 async def telegram_webhook(request: Request):
