@@ -51,6 +51,7 @@ async def edit_tables(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # אם הקריאה היא מפקודה
         await update.message.reply_text("בחר טבלה לעריכה:", reply_markup=reply_markup)
 
+setattr(edit_tables, "desc", 'עריכת טבלאות')
 
 
 # פונקציה להצגת הפעולות האפשריות על הטבלה

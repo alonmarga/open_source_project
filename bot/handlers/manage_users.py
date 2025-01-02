@@ -16,6 +16,7 @@ pending_requests = {}
 admin_approvals = {}
 
 async def check_or_register_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
+
     chat_id = update.effective_user.id
 
     # בדיקה אם המשתמש קיים בטבלה dev_tg_users
@@ -33,6 +34,10 @@ async def check_or_register_user(update: Update, context: ContextTypes.DEFAULT_T
             "לא מצאתי אותך במערכת. האם תרצה להירשם?",
             reply_markup=keyboard
         )
+
+setattr(check_or_register_user, "desc", "רישום או בדיקת משתמש במערכת.")
+
+
 
 async def handle_button_click(update: Update, context: ContextTypes.DEFAULT_TYPE):
     callback_q = update.callback_query

@@ -40,6 +40,8 @@ async def view_tables(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await update.message.reply_text("בחר טבלה לצפייה:", reply_markup=reply_markup)
 
+setattr(view_tables, "desc", "צפיה בטבלאות")
+
 
 # פונקציה להצגת שאלה למשתמש על פורמט התוצאה
 async def display_table(update: Update, context: ContextTypes.DEFAULT_TYPE):

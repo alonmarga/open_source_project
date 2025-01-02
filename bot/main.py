@@ -17,7 +17,7 @@ from handlers.manage_users import (
 )
 from handlers.views import view_tables, display_table, display_table_in_format
 from handlers.edit import edit_tables, select_action, perform_action, handle_input
-
+from handlers.general import show_help
 
 load_dotenv()
 
@@ -35,6 +35,7 @@ app = FastAPI()
 if not BOT_TOKEN:
     raise ValueError("TELEGRAM_BOT_TOKEN is not set!")
 
+
 application = Application.builder().token(BOT_TOKEN).build()
 
 @app.on_event("startup")
@@ -42,6 +43,7 @@ async def startup_event():
     logger.info("Initializing Telegram bot...")
     await application.initialize()
 
+application.add_handler(CommandHandler("help", show_help))
 
 application.add_handler(CommandHandler("log_in", check_or_register_user))
 # קליטת לחיצות על כפתורים (כן רוצה/לא רוצה להירשם + אישור/דחייה אדמין)
