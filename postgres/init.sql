@@ -1,3 +1,8 @@
+CREATE DATABASE myuser;
+
+CREATE DATABASE airflow;
+GRANT ALL PRIVILEGES ON DATABASE airflow TO myuser;
+
 DROP TABLE IF EXISTS dev_customers, dev_roles, dev_tg_users, dev_employees CASCADE;
 
 -- Create Customers table

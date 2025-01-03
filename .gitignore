@@ -102,3 +102,7 @@ desktop.ini
 
 project_struct.py
 postgres/data/
+data_generate/data_generate.py
+data_generate/
+airflow/logs
+/plugins
