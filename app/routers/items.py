@@ -18,5 +18,5 @@ def get_users():
     """
     Fetch all users from the database.
     """
-    sql = "SELECT * FROM users;"
+    sql = "select * from dev_tg_users;"
     return query_db(sql)

@@ -83,3 +83,4 @@ def update_db(sql: str, parameters: dict = None):
         conn.commit()  # Commit the transaction
         return result.rowcount  # Return the number of rows updated
 
+

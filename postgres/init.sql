@@ -53,3 +53,15 @@ CREATE TABLE dev_employees (
 INSERT INTO dev_employees (tg_id, emp_first_name, emp_last_name)
 VALUES
     (1, 'Alon', 'Margalit');
+
+
+-- Table for Airflow
+
+CREATE TABLE IF NOT EXISTS orders (
+    order_id      BIGINT PRIMARY KEY,
+    customer_id   BIGINT NOT NULL,
+    order_date    DATE NOT NULL,
+    ship_date     DATE,
+    order_status  VARCHAR(50),
+    items         JSONB
+);
