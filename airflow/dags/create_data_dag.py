@@ -7,7 +7,7 @@ import random
 import os
 
 
-from app.db import query_db
+from app.db import query_db, batch_insert
 
 default_args = {
     'owner': 'Alon Margalit',
@@ -19,7 +19,7 @@ default_args = {
 @dag(
     dag_id='Create_data',
     default_args=default_args,
-    schedule_interval='@daily',
+    schedule_interval=None,
     start_date=datetime(2024, 1, 1),
     catchup=False,
     tags=['example']
@@ -55,7 +55,7 @@ def data_fake_dag():
             print(f'get_product_file Unexpected error: {e}')
             return {}
 
-    @task()
+    @task(multiple_outputs=True)
     def generate_orders(customers_df, products_data, max_orders=5, max_items=3):
         try:
             orders = []
@@ -85,23 +85,46 @@ def data_fake_dag():
                             "brand": brand["brand"],
                             "price": brand["price"]
                         })
+
+                    order["items"] = json.dumps(order["items"]).decode("utf-8")
                     orders.append(order)
-            orders_df = pd.DataFrame(orders)
-            print(orders_df)
-            # return orders_df
+
+            # Extract column names and list of tuples
+            if not orders:
+                return [], []
+
+            column_names = list(orders[0].keys())
+            data_tuples = [tuple(order[col] for col in column_names) for order in orders]
+
+            return {
+                "column_names": column_names,
+                "data_tuples": data_tuples
+            }
         except Exception as e:
             print(f'generate_orders Unexpected error: {e}')
-            return pd.DataFrame()
+            return {
+                "column_names": [],
+                "data_tuples": []
+            }
 
     @task()
-    def insert_to_db():
-        sql ='select * from dev_tg_users;'
-        return query_db(sql)
+    def insert_to_db(columns, data_tuples):
+        try:
+            created_count = len(data_tuples)
+            inserted_count = batch_insert('orders', columns=columns, values=data_tuples)
+            if inserted_count != created_count:
+                raise Exception(
+                    f"Mismatch in rows count - created: {created_count}, inserted: {inserted_count}"
+                )
+            print(f"Success: {inserted_count} rows inserted (out of {created_count} created).")
+        except Exception as e:
+            print(f"insert_to_db Unexpected error: {e}")
+            raise
 
     # Define task dependencies
     customer_data = data_from_mockaroo()
     product_data = get_product_file()
-    generate_orders(customer_data, product_data)
-    insert_to_db()
+    results = generate_orders(customer_data, product_data)
+    insert_to_db(results['column_names'], results['data_tuples'])
 
 etl_dag = data_fake_dag()

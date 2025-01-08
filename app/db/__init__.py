@@ -4,7 +4,7 @@ import os
 from sqlalchemy.sql import text
 from dotenv import load_dotenv
 from psycopg2.extras import execute_values
-
+import psycopg2
 
 load_dotenv()
 
@@ -84,3 +84,46 @@ def update_db(sql: str, parameters: dict = None):
         return result.rowcount  # Return the number of rows updated
 
 
+@contextmanager
+def get_psycopg2_connection():
+    """
+    Context manager to get a psycopg2 connection for batch operations.
+    """
+
+    connection = psycopg2.connect(DATABASE_URL)
+    try:
+        yield connection
+    finally:
+        connection.close()
+
+
+def batch_insert(table_name: str, columns: list, values: list, page_size: int = 1000):
+    """
+    Helper function to perform batch insert operations.
+
+    Args:
+        table_name (str): Name of the table to insert into
+        columns (list): List of column names
+        values (list): List of tuples containing values to insert
+        page_size (int): Number of rows to insert in each batch
+
+    Returns:
+        int: Total number of rows inserted
+    """
+    insert_query = f"""
+        INSERT INTO {table_name} ({','.join(columns)})
+        VALUES %s
+    """
+    total_rows = 0
+
+    with get_psycopg2_connection() as conn:
+        with conn.cursor() as cur:
+            try:
+                execute_values(cur, insert_query, values, page_size=page_size)
+                conn.commit()
+                total_rows = cur.rowcount
+            except Exception as e:
+                conn.rollback()
+                raise Exception(f"Batch insert failed: {str(e)}")
+
+    return total_rows

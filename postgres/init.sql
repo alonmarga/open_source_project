@@ -3,7 +3,7 @@ CREATE DATABASE myuser;
 CREATE DATABASE airflow;
 GRANT ALL PRIVILEGES ON DATABASE airflow TO myuser;
 
-DROP TABLE IF EXISTS dev_customers, dev_roles, dev_tg_users, dev_employees CASCADE;
+DROP TABLE IF EXISTS dev_customers, dev_roles, dev_tg_users, dev_employees, orders CASCADE;
 
 -- Create Customers table
 CREATE TABLE dev_customers (
@@ -63,5 +63,7 @@ CREATE TABLE IF NOT EXISTS orders (
     order_date    DATE NOT NULL,
     ship_date     DATE,
     order_status  VARCHAR(50),
-    items         JSONB
+    items         JSONB,
+    inserted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+
 );
