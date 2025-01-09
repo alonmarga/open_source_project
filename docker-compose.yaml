@@ -133,3 +133,16 @@ services:
     depends_on:
       - fastapi
     command: /bin/bash -c "/opt/bot/setup_webhook.sh && uvicorn main:app --host 0.0.0.0 --port 8001 --reload"
+
+  minio:
+    image: minio/minio:latest
+    container_name: minio
+    ports:
+      - "${MINIO_API_PORT}:${MINIO_API_PORT}" # S3 API
+      - "${MINIO_CONSOLE_PORT}:${MINIO_CONSOLE_PORT}" # Admin Console
+    environment:
+      MINIO_ROOT_USER: "${MINIO_ROOT_USER}"  # From .env file
+      MINIO_ROOT_PASSWORD: "${MINIO_ROOT_PASSWORD}"  # From .env file
+    volumes:
+      - "${MINIO_DATA_PATH}:/data" # Persistent data storage
+    command: server /data --console-address ":${MINIO_CONSOLE_PORT}"

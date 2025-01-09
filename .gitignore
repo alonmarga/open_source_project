@@ -106,3 +106,5 @@ data_generate/data_generate.py
 data_generate/
 airflow/logs
 /plugins
+my-json-storage/
+minio-data/

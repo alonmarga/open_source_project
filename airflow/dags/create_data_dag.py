@@ -5,6 +5,8 @@ import requests
 import pandas as pd
 import random
 import os
+import boto3
+from botocore.exceptions import ClientError
 
 
 from app.db import query_db, batch_insert
@@ -19,7 +21,7 @@ default_args = {
 @dag(
     dag_id='Create_data',
     default_args=default_args,
-    schedule_interval=None,
+    schedule_interval=timedelta(minutes=30),  # Run twice an hour
     start_date=datetime(2024, 1, 1),
     catchup=False,
     tags=['example']
@@ -98,13 +100,15 @@ def data_fake_dag():
 
             return {
                 "column_names": column_names,
-                "data_tuples": data_tuples
+                "data_tuples": data_tuples,
+                "orders_data": orders  # Pass orders directly
             }
         except Exception as e:
             print(f'generate_orders Unexpected error: {e}')
             return {
                 "column_names": [],
-                "data_tuples": []
+                "data_tuples": [],
+                "orders_data": []
             }
 
     @task()
@@ -121,10 +125,42 @@ def data_fake_dag():
             print(f"insert_to_db Unexpected error: {e}")
             raise
 
+    @task()
+    def save_to_minio(orders_data, bucket_name="my-json-storage"):
+        try:
+            # MinIO configuration
+            s3_client = boto3.client(
+                's3',
+
+                endpoint_url="http://minio:9000",
+                aws_access_key_id=os.getenv("MINIO_ROOT_USER", "minioadmin"),
+                aws_secret_access_key=os.getenv("MINIO_ROOT_PASSWORD", "minioadmin"),
+            )
+
+            # Check if bucket exists, create if not
+            try:
+                s3_client.head_bucket(Bucket=bucket_name)
+            except ClientError:
+                print(f"Bucket '{bucket_name}' does not exist. Creating it...")
+                s3_client.create_bucket(Bucket=bucket_name)
+
+            # Generate dynamic file name
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            object_name = f"orders_{timestamp}.json"
+
+            # Convert orders_data to JSON and upload
+            json_data = json.dumps(orders_data, option=json.OPT_INDENT_2)
+            s3_client.put_object(Bucket=bucket_name, Key=object_name, Body=json_data)
+            print(f"Orders uploaded to MinIO bucket '{bucket_name}' as '{object_name}'.")
+        except Exception as e:
+            print(f"save_to_minio Unexpected error: {e}")
+            raise
+
     # Define task dependencies
     customer_data = data_from_mockaroo()
     product_data = get_product_file()
     results = generate_orders(customer_data, product_data)
-    insert_to_db(results['column_names'], results['data_tuples'])
+    # insert_to_db(results['column_names'], results['data_tuples'])
+    save_to_minio(results['orders_data'], bucket_name="my-json-storage")
 
 etl_dag = data_fake_dag()

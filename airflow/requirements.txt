@@ -7,3 +7,4 @@ fastapi_offline
 psycopg2-binary
 orjson
 pandas
+boto3
