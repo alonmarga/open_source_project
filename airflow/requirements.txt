@@ -8,3 +8,5 @@ psycopg2-binary
 orjson
 pandas
 boto3
+pyspark==3.3.2
+apache-airflow-providers-apache-spark
