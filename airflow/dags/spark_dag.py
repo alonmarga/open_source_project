@@ -16,7 +16,7 @@ def my_dag():
         conn_id="my_spark_conn",
         application="/opt/airflow/include/read.py",
         # Use packages instead of local jar paths to avoid "not found" on the Airflow side:
-        packages="org.apache.hadoop:hadoop-aws:3.3.4,com.amazonaws:aws-java-sdk-bundle:1.12.504",
+        packages='org.apache.hadoop:hadoop-aws:3.3.4,com.amazonaws:aws-java-sdk-bundle:1.12.504,org.postgresql:postgresql:42.7.1',
         conf={
             "spark.hadoop.fs.s3a.endpoint": "http://minio:9000",
             "spark.hadoop.fs.s3a.access.key": "K02e2gI7iOKwQrV6RP8j",
