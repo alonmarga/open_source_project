@@ -1,0 +1,24 @@
+FROM bitnami/spark:latest
+
+USER root
+
+# Install necessary dependencies
+RUN apt-get update && apt-get install -y wget openjdk-17-jdk && rm -rf /var/lib/apt/lists/*
+
+# Download and install required JAR files
+RUN wget -q https://repo1.maven.org/maven2/org/apache/hadoop/hadoop-aws/3.3.4/hadoop-aws-3.3.4.jar \
+         -O /opt/bitnami/spark/jars/hadoop-aws-3.3.4.jar && \
+    wget -q https://repo1.maven.org/maven2/com/amazonaws/aws-java-sdk-bundle/1.12.504/aws-java-sdk-bundle-1.12.504.jar \
+         -O /opt/bitnami/spark/jars/aws-java-sdk-bundle-1.12.504.jar && \
+    wget -q https://repo1.maven.org/maven2/org/apache/hadoop/hadoop-common/3.3.4/hadoop-common-3.3.4.jar \
+         -O /opt/bitnami/spark/jars/hadoop-common-3.3.4.jar && \
+    wget -q https://repo1.maven.org/maven2/com/google/guava/guava/30.1-jre/guava-30.1-jre.jar \
+         -O /opt/bitnami/spark/jars/guava-30.1-jre.jar
+
+# Set JAVA_HOME
+ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
+
+# Ensure correct permissions
+RUN chmod +x /opt/bitnami/spark/bin/*
+
+USER 1001
