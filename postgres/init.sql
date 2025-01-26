@@ -57,13 +57,18 @@ VALUES
 
 -- Table for Airflow
 
-CREATE TABLE IF NOT EXISTS orders (
-    order_id      BIGINT PRIMARY KEY,
-    customer_id   BIGINT NOT NULL,
-    order_date    DATE NOT NULL,
-    ship_date     DATE,
-    order_status  VARCHAR(50),
-    items         JSONB,
-    inserted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
+CREATE TABLE IF NOT EXISTS orders (
+    internal_order_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    order_id          BIGINT NOT NULL,
+    customer_id       BIGINT NOT NULL,
+    order_date        DATE NOT NULL,
+    ship_date         DATE,
+    order_status      VARCHAR(50),
+    items             JSONB,
+    inserted_at       TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+
+
