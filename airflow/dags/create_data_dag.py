@@ -30,8 +30,7 @@ def data_fake_dag():
     @task()
     def data_from_mockaroo():
         try:
-            url = "https://api.mockaroo.com/api/generate.json?key=82bfd910&schema=pii"
-            response = requests.get(url)
+            response = requests.get(os.environ.get("MOCKAROO_URL"))
             response.raise_for_status()
             data = response.json()
             return pd.DataFrame(data)  # Convert data to DataFrame for further processing
@@ -133,8 +132,8 @@ def data_fake_dag():
                 's3',
 
                 endpoint_url="http://minio:9000",
-                aws_access_key_id=os.getenv("MINIO_ROOT_USER", "minioadmin"),
-                aws_secret_access_key=os.getenv("MINIO_ROOT_PASSWORD", "minioadmin"),
+                aws_access_key_id=os.environ.get("MINIO_ROOT_USER"),
+                aws_secret_access_key=os.environ.get("MINIO_ROOT_PASSWORD"),
             )
 
             # Check if bucket exists, create if not
@@ -160,7 +159,6 @@ def data_fake_dag():
     customer_data = data_from_mockaroo()
     product_data = get_product_file()
     results = generate_orders(customer_data, product_data)
-    # insert_to_db(results['column_names'], results['data_tuples'])
     save_to_minio(results['orders_data'], bucket_name="my-json-storage")
 
 etl_dag = data_fake_dag()

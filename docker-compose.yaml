@@ -14,7 +14,9 @@ x-airflow-common: &airflow-common
     AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
     AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
     AIRFLOW_CONN_MY_SPARK_CONN: "spark://spark-master:7077"
-
+    MOCKAROO_URL: ${MOCKAROO_URL}
+    MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
+    MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
   volumes:
     - ./airflow/dags:/opt/airflow/dags
     - ./airflow/logs:/opt/airflow/logs
@@ -175,6 +177,51 @@ services:
       - "${MINIO_DATA_PATH}:/data" # Persistent data storage
     command: server /data --console-address ":${MINIO_CONSOLE_PORT}"
 
+    networks:
+      - airflow
+  spark-master:
+    build:
+      context: ./spark_scripts
+      dockerfile: Dockerfile.spark
+    container_name: spark-master
+    environment:
+      - SPARK_MODE=master
+      - SPARK_RPC_AUTHENTICATION_ENABLED=no
+      - SPARK_RPC_ENCRYPTION_ENABLED=no
+      - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=no
+      - SPARK_SSL_ENABLED=no
+      - SPARK_MASTER_WEBUI_PORT=8081
+      - SPARK_MASTER_HOST=spark-master
+      - MINIO_ACCESS_KEY= ${MINIO_ACCESS_KEY}
+      - MINIO_SECRET_KEY= ${MINIO_SECRET_KEY}
+      - PYTHONPATH=/opt/airflow/include
+    ports:
+      - "8081:8081"
+      - "7077:7077"
+    volumes:
+      - ./spark_scripts:/opt/airflow/include
+    networks:
+      - airflow
+
+  spark-worker:
+    build:
+      context: ./spark_scripts
+      dockerfile: Dockerfile.spark
+    container_name: spark-worker
+    depends_on:
+      - spark-master
+    environment:
+      - SPARK_MODE=worker
+      - SPARK_MASTER_URL=spark://spark-master:7077
+      - SPARK_WORKER_MEMORY=2G
+      - SPARK_WORKER_CORES=2
+      - SPARK_RPC_AUTHENTICATION_ENABLED=no
+      - SPARK_RPC_ENCRYPTION_ENABLED=no
+      - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=no
+      - SPARK_SSL_ENABLED=no
+      - PYTHONPATH=/opt/airflow/include
+    volumes:
+      - ./spark_scripts:/opt/airflow/include
     networks:
       - airflow
 
