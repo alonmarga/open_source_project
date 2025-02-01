@@ -10,7 +10,7 @@ from airflow.providers.apache.spark.operators.spark_submit import SparkSubmitOpe
     schedule=None,
     catchup=False,
 )
-def my_dag():
+def flat_orders_dag():
 
     @task
     def log_start():
@@ -25,7 +25,7 @@ def my_dag():
     submit_job = SparkSubmitOperator(
         task_id="submit_job",
         conn_id="my_spark_conn",
-        application="/opt/airflow/include/jobs/read_and_write.py",
+        application="/opt/airflow/include/jobs/flatten_orders.py",
         packages='org.apache.hadoop:hadoop-aws:3.3.4,com.amazonaws:aws-java-sdk-bundle:1.12.504,org.postgresql:postgresql:42.7.1',
         deploy_mode="client",
         verbose=True,
@@ -35,4 +35,4 @@ def my_dag():
     # Define task dependencies
     start >> submit_job >> end
 
-my_dag()
+flat_orders_dag()

@@ -44,14 +44,60 @@ def data_fake_dag():
             print(f"data_from_mockaroo An unexpected error occurred: {e}")
             return pd.DataFrame()
 
+
     @task()
-    def get_product_file():
+    def get_product_from_db():
         try:
-            airflow_home = os.getenv('AIRFLOW_HOME', '/usr/local/airflow')  # Default Airflow home path
-            file_path = os.path.join(airflow_home, 'products_data.json')
-            with open(file_path, 'r') as f:
-                data = json.loads(f.read())
-            return data
+            # Query to get all products with their categories
+            query = """
+                SELECT i.product_id,
+                       c.category_name as category,
+                       i.product_name as name,
+                       i.brand,
+                       i.price::float as price
+                FROM dev_items i
+                JOIN dev_categories c ON i.category_id = c.category_id
+                ORDER BY c.category_name, i.product_name, i.brand;
+            """
+
+            # Execute query using query_db function
+            products_data = query_db(query)
+
+            transformed_data = {
+                "categories": [],
+                "products": {}
+            }
+
+            for row in products_data:
+                category = row['category']
+
+                # Add category to categories list if not exists
+                if category not in transformed_data["categories"]:
+                    transformed_data["categories"].append(category)
+                    transformed_data["products"][category] = []
+
+                # Find existing product or create new one
+                product = next(
+                    (p for p in transformed_data["products"][category]
+                     if p["name"] == row["name"]),
+                    None
+                )
+
+                if product is None:
+                    product = {
+                        "name": row["name"],
+                        "brands": []
+                    }
+                    transformed_data["products"][category].append(product)
+
+                # Add brand info
+                product["brands"].append({
+                    "brand": row["brand"],
+                    "price": row["price"]  # Already converted to float in the query
+                })
+
+            return transformed_data
+
         except Exception as e:
             print(f'get_product_file Unexpected error: {e}')
             return {}
@@ -157,7 +203,7 @@ def data_fake_dag():
 
     # Define task dependencies
     customer_data = data_from_mockaroo()
-    product_data = get_product_file()
+    product_data = get_product_from_db()
     results = generate_orders(customer_data, product_data)
     save_to_minio(results['orders_data'], bucket_name="my-json-storage")
 

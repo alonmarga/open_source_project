@@ -21,7 +21,6 @@ x-airflow-common: &airflow-common
     - ./airflow/dags:/opt/airflow/dags
     - ./airflow/logs:/opt/airflow/logs
     - ./airflow/plugins:/opt/airflow/plugins
-    - ./airflow/products_data.json:/opt/airflow/products_data.json
     - ./app:/opt/app
     - ${AIRFLOW_PROJ_DIR:-.}/spark_scripts:/opt/airflow/include  # Add this line
 
