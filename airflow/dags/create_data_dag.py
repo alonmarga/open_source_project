@@ -7,9 +7,13 @@ import random
 import os
 import boto3
 from botocore.exceptions import ClientError
-
+from dotenv import load_dotenv
 
 from app.db import query_db, batch_insert
+
+load_dotenv()
+
+
 
 default_args = {
     'owner': 'Alon Margalit',
@@ -49,14 +53,14 @@ def data_fake_dag():
     def get_product_from_db():
         try:
             # Query to get all products with their categories
-            query = """
+            query = f"""
                 SELECT i.product_id,
                        c.category_name as category,
                        i.product_name as name,
                        i.brand,
                        i.price::float as price
-                FROM dev_items i
-                JOIN dev_categories c ON i.category_id = c.category_id
+                FROM {(os.environ.get("DB_DEV_TABLE_ITEMS"))} i
+                JOIN {(os.environ.get("DB_DEV_TABLE_CATEGORIES"))} c ON i.category_id = c.category_id
                 ORDER BY c.category_name, i.product_name, i.brand;
             """
 

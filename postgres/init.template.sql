@@ -1,34 +1,35 @@
-CREATE DATABASE myuser;
+--CREATE DATABASE myuser;
 
 CREATE DATABASE airflow;
 GRANT ALL PRIVILEGES ON DATABASE airflow TO myuser;
 
-DROP TABLE IF EXISTS dev_customers, dev_roles, dev_tg_users, dev_employees, orders CASCADE;
+DROP TABLE IF EXISTS ${TABLE_ORDERS}, ${TABLE_CUSTOMERS}, ${TABLE_ROLES}, ${TABLE_TG_USERS},
+${TABLE_EMPLOYEES}, ${TABLE_CATEGORIES}, ${TABLE_ITEMS}, ${TABLE_FLAT_ORDERS} CASCADE;
 
--- Create Customers table
-CREATE TABLE dev_customers (
+CREATE TABLE ${TABLE_CUSTOMERS} (
     id SERIAL PRIMARY KEY,
     username VARCHAR(255) NOT NULL,
     email VARCHAR(255) UNIQUE NOT NULL,
     password_hash VARCHAR(255) NOT NULL
 );
 
+
 -- Create Roles table
-CREATE TABLE dev_roles (
+CREATE TABLE ${TABLE_ROLES} (
     id INT PRIMARY KEY,
     role_name VARCHAR(20) UNIQUE NOT NULL,
     role_desc VARCHAR(200)
 );
 
 -- Insert default roles
-INSERT INTO dev_roles (id, role_name, role_desc)
+INSERT INTO ${TABLE_ROLES} (id, role_name, role_desc)
 VALUES
     (1, 'Super user', 'Root user with all access and privileges. Selected few have this role'),
     (2, 'Admin', 'Similar to super user, but can not access all tables'),
     (3, 'Plain', 'Lowest user, can only view');
 
 -- Create Telegram Users table
-CREATE TABLE dev_tg_users (
+CREATE TABLE ${TABLE_TG_USERS} (
     id SERIAL PRIMARY KEY,
     telegram_id BIGINT UNIQUE NOT NULL,
     role_id INT REFERENCES dev_roles(id),
@@ -36,12 +37,12 @@ CREATE TABLE dev_tg_users (
 );
 
 -- Insert default Telegram users
-INSERT INTO dev_tg_users (telegram_id, role_id)
+INSERT INTO ${TABLE_TG_USERS} (telegram_id, role_id)
 VALUES
     (5220982261, 1);
 
 -- Create Employees table
-CREATE TABLE dev_employees (
+CREATE TABLE ${TABLE_EMPLOYEES} (
     emp_id SERIAL PRIMARY KEY,
     tg_id INT REFERENCES dev_tg_users(id),
     emp_first_name VARCHAR(50),
@@ -50,7 +51,7 @@ CREATE TABLE dev_employees (
 );
 
 -- Insert default employees
-INSERT INTO dev_employees (tg_id, emp_first_name, emp_last_name)
+INSERT INTO ${TABLE_EMPLOYEES} (tg_id, emp_first_name, emp_last_name)
 VALUES
     (1, 'Alon', 'Margalit');
 
@@ -59,7 +60,7 @@ VALUES
 
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
-CREATE TABLE IF NOT EXISTS orders (
+CREATE TABLE IF NOT EXISTS ${TABLE_ORDERS} (
     internal_order_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     order_id          BIGINT NOT NULL,
     customer_id       BIGINT NOT NULL,
@@ -70,7 +71,7 @@ CREATE TABLE IF NOT EXISTS orders (
     inserted_at       TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE IF NOT EXISTS dev_flat_orders (
+CREATE TABLE IF NOT EXISTS ${TABLE_FLAT_ORDERS} (
     internal_order_id UUID NOT NULL,
     order_id BIGINT NOT NULL,
     customer_id BIGINT NOT NULL,
@@ -86,13 +87,13 @@ CREATE TABLE IF NOT EXISTS dev_flat_orders (
 
 -- Items Data
 -- Create categories table
-CREATE TABLE IF NOT EXISTS dev_categories (
+CREATE TABLE IF NOT EXISTS ${TABLE_CATEGORIES} (
     category_id SERIAL PRIMARY KEY,
     category_name VARCHAR(50) NOT NULL UNIQUE
 );
 
 -- Create items table
-CREATE TABLE IF NOT EXISTS dev_items (
+CREATE TABLE IF NOT EXISTS ${TABLE_ITEMS} (
     item_id SERIAL PRIMARY KEY,
     product_id VARCHAR(20) NOT NULL,
     product_name VARCHAR(100) NOT NULL,
@@ -102,7 +103,7 @@ CREATE TABLE IF NOT EXISTS dev_items (
 );
 
 -- Insert categories
-INSERT INTO dev_categories (category_name) VALUES
+INSERT INTO ${TABLE_CATEGORIES} (category_name) VALUES
 ('Electronics'),
 ('Clothing'),
 ('Home & Kitchen'),
@@ -116,7 +117,7 @@ INSERT INTO dev_categories (category_name) VALUES
 ('Pet Supplies');
 
 -- Insert items data
-INSERT INTO dev_items (product_id, category_id, product_name, brand, price) VALUES
+INSERT INTO ${TABLE_ITEMS} (product_id, category_id, product_name, brand, price) VALUES
 ('ELEC-001-DELL', 1, 'Laptop', 'Dell', 999.99),
 ('ELEC-001-HP', 1, 'Laptop', 'HP', 899.99),
 ('ELEC-001-LEN', 1, 'Laptop', 'Lenovo', 799.99),

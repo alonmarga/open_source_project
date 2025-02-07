@@ -27,7 +27,7 @@ def read_from_postgres(spark):
         .format("jdbc") \
         .option("url", f"jdbc:postgresql://postgres:5432/{os.environ.get('POSTGRES_DB')}") \
         .option("driver", "org.postgresql.Driver") \
-        .option("dbtable", "orders") \
+        .option("dbtable", os.environ.get('DB_DEV_TABLE_ORDERS')) \
         .option("user", os.environ.get('POSTGRES_USER')) \
         .option("password", os.environ.get('POSTGRES_PASSWORD')) \
         .load()
@@ -83,7 +83,7 @@ def write_to_postgres(df):
     df.write \
         .jdbc(
         url=postgres_properties["url"],
-        table="dev_flat_orders",
+        table=os.environ.get('DB_DEV_TABLE_FLAT_ORDERS'),
         mode="append",
         properties=postgres_properties
     )
