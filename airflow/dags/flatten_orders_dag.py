@@ -10,7 +10,7 @@ from airflow.providers.apache.spark.operators.spark_submit import SparkSubmitOpe
     schedule=None,
     catchup=False,
 )
-def flat_orders_dag():
+def Flat_Orders_Dag():
 
     @task
     def log_start():
@@ -35,4 +35,4 @@ def flat_orders_dag():
     # Define task dependencies
     start >> submit_job >> end
 
-flat_orders_dag()
+Flat_Orders_Dag()

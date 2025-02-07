@@ -52,7 +52,7 @@ services:
       TABLE_ITEMS: ${DB_DEV_TABLE_ITEMS}
       TABLE_FLAT_ORDERS: ${DB_DEV_TABLE_FLAT_ORDERS}
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - ./postgres/data:/var/lib/postgresql/data
       - ./postgres/init.template.sql:/docker-entrypoint-initdb.d/init.template
       - ./postgres/init-wrapper.sh:/docker-entrypoint-initdb.d/01-init-wrapper.sh
       - ./.env:/docker-entrypoint-initdb.d/.env
@@ -153,6 +153,8 @@ services:
       - postgres
     volumes:
       - ./app:/opt/app
+      - ./utils:/opt/utils  # Add this
+
 
     networks:
       - airflow

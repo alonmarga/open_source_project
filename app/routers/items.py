@@ -1,15 +1,27 @@
 from fastapi import APIRouter
 from app.db import query_db
+# from dotenv import load_dotenv
+import os
+from utils.logger import setup_logger
 
 router = APIRouter()
+logger = setup_logger(__name__)
 
-@router.get("/")
-def get_users():
-    return {"message": "List of items"}
+@router.get("/get_all_items")
+async def get_all_items():
+    try:
+        logger.info("Entering route...")
+        query = f"select * from {os.environ.get('DB_DEV_TABLE_ITEMS')}"
+        logger.info("Query ready and running...")
+        result = query_db(sql=query)
+        logger.info("Done")
+        return result
+    except Exception as e   :
+        raise
 
 
-@router.get('/item')
-def test_route():
+@router.get('/categories')
+async def test_route():
     return "it"
 
 

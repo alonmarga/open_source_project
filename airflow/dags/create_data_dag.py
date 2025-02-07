@@ -23,7 +23,7 @@ default_args = {
 
 
 @dag(
-    dag_id='Create_data',
+    dag_id='Create_Data_Dag',
     default_args=default_args,
     schedule_interval=timedelta(minutes=30),  # Run twice an hour
     start_date=datetime(2024, 1, 1),
@@ -180,7 +180,6 @@ def data_fake_dag():
             # MinIO configuration
             s3_client = boto3.client(
                 's3',
-
                 endpoint_url="http://minio:9000",
                 aws_access_key_id=os.environ.get("MINIO_ROOT_USER"),
                 aws_secret_access_key=os.environ.get("MINIO_ROOT_PASSWORD"),

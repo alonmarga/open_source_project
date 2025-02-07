@@ -10,7 +10,7 @@ from airflow.providers.apache.spark.operators.spark_submit import SparkSubmitOpe
     schedule=None,
     catchup=False,
 )
-def my_dag():
+def Insert_Data_To_PG_Dag():
 
     @task
     def log_start():
@@ -35,4 +35,4 @@ def my_dag():
     # Define task dependencies
     start >> submit_job >> end
 
-my_dag()
+Insert_Data_To_PG_Dag()
