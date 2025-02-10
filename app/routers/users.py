@@ -1,21 +1,15 @@
 from fastapi import APIRouter
+from fastapi.params import Depends
+
 from app.db import query_db
+from .auth import require_read
 
 router = APIRouter()
 
 @router.get("/count")
-def get_users():
+def get_users(user = Depends(require_read)):
     """
     Fetch all users from the database.
     """
-    sql = "SELECT count(*) FROM users;"
-    return query_db(sql)
-
-
-@router.get("/rownum")
-def get_users():
-    """
-    Fetch all users from the database.
-    """
-    sql = "SELECT ROW_NUMBER() OVER (ORDER BY id) AS row_number, * FROM users;"
+    sql = "SELECT count(*) FROM dev_tg_users;"
     return query_db(sql)

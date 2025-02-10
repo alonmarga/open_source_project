@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 from app.routers import items  # Import the users router
 from app.routers import users
+from app.routers import auth
 
 # Create a centralized router
 api_router = APIRouter()

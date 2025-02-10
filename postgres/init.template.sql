@@ -18,28 +18,36 @@ CREATE TABLE ${TABLE_CUSTOMERS} (
 CREATE TABLE ${TABLE_ROLES} (
     id INT PRIMARY KEY,
     role_name VARCHAR(20) UNIQUE NOT NULL,
-    role_desc VARCHAR(200)
+    role_desc VARCHAR(200),
+    can_read BOOLEAN DEFAULT false,
+    can_write BOOLEAN DEFAULT false,
+    can_update BOOLEAN DEFAULT false,
+    can_delete BOOLEAN DEFAULT false,
+    is_admin BOOLEAN DEFAULT false,
+    is_super BOOLEAN DEFAULT false
+
 );
 
 -- Insert default roles
-INSERT INTO ${TABLE_ROLES} (id, role_name, role_desc)
+INSERT INTO ${TABLE_ROLES} (id, role_name, role_desc,can_read, can_write, can_update, can_delete, is_admin,is_super)
 VALUES
-    (1, 'Super user', 'Root user with all access and privileges. Selected few have this role'),
-    (2, 'Admin', 'Similar to super user, but can not access all tables'),
-    (3, 'Plain', 'Lowest user, can only view');
+    (1, 'Super user', 'Root user with all access and privileges. Selected few have this role',true,true,true,true,true,true),
+    (2, 'Admin', 'Similar to super user, but can not access all tables',true,true,true,true,true,false),
+    (3, 'Plain', 'Lowest user, can only view',true,false,false,false,false,false);
 
 -- Create Telegram Users table
 CREATE TABLE ${TABLE_TG_USERS} (
     id SERIAL PRIMARY KEY,
     telegram_id BIGINT UNIQUE NOT NULL,
     role_id INT REFERENCES dev_roles(id),
+    access_token VARCHAR(255) UNIQUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Insert default Telegram users
-INSERT INTO ${TABLE_TG_USERS} (telegram_id, role_id)
+INSERT INTO ${TABLE_TG_USERS} (telegram_id, role_id, access_token)
 VALUES
-    (5220982261, 1);
+    ('${DEFAULT_ADMIN_TG_ID}', 1, '${DEFAULT_ADMIN_TOKEN}');
 
 -- Create Employees table
 CREATE TABLE ${TABLE_EMPLOYEES} (
