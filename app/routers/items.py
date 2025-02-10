@@ -1,8 +1,8 @@
 from fastapi import APIRouter
-from app.db import query_db
-# from dotenv import load_dotenv
+from app.db import *
 import os
 from utils.logger import setup_logger
+from app.models.items_models import Item
 
 router = APIRouter()
 logger = setup_logger(__name__)
@@ -16,19 +16,30 @@ async def get_all_items():
         result = query_db(sql=query)
         logger.info("Done")
         return result
-    except Exception as e   :
-        raise
+    except Exception as e:
+        logger.error(e)
+        return {f"Error has occurred: {str(e)}"}
 
 
 @router.get('/categories')
-async def test_route():
-    return "it"
+async def get_all_categories():
+    try:
+        logger.info("Entering route...")
+        query = f"select * from {os.environ.get('DB_DEV_TABLE_CATEGORIES')}"
+        logger.info("Query ready and running...")
+        result = query_db(sql=query)
+        logger.info("Done")
+        return result
+    except Exception as e:
+        logger.error(e)
+        return {f"Error has occurred: {str(e)}"}
 
+@router.post('/create_new_item')
+async def create_an_item(item:Item):
+    item_dict = item.model_dump()
+    columns = ', '.join(item_dict.keys())
+    param_placeholders = ', '.join(f':{key}' for key in item_dict.keys())
 
-@router.get("/itemss")
-def get_users():
-    """
-    Fetch all users from the database.
-    """
-    sql = "select * from dev_tg_users;"
-    return query_db(sql)
+    query = f"INSERT INTO {os.environ.get('DB_DEV_TABLE_ITEMS')} ({columns}) VALUES ({param_placeholders})"
+    logger.info(query)
+    return item
