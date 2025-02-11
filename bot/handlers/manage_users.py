@@ -2,6 +2,9 @@ import logging
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import ContextTypes, CallbackQueryHandler, MessageHandler, filters
 from app.db import query_db, insert_db, update_db  # וודא שיש לך פונקציות אלו ב-db.py
+import os
+import secrets
+
 
 # Configure logging
 logging.basicConfig(
@@ -20,7 +23,7 @@ async def check_or_register_user(update: Update, context: ContextTypes.DEFAULT_T
     chat_id = update.effective_user.id
 
     # בדיקה אם המשתמש קיים בטבלה dev_tg_users
-    sql_check_user = "SELECT * FROM dev_tg_users WHERE telegram_id = :telegram_id;"
+    sql_check_user = f"SELECT * FROM {os.environ.get('DB_DEV_TABLE_TG_USERS')} WHERE telegram_id = :telegram_id;"
     user_in_db = query_db(sql_check_user, parameters={"telegram_id": chat_id}, fetchone=True)
 
     if user_in_db:
@@ -78,8 +81,8 @@ async def handle_registration_details(update: Update, context: ContextTypes.DEFA
         return
 
     # הוספת שם פרטי ומשפחה לטבלת dev_employees
-    sql_insert_emp = """
-        INSERT INTO dev_employees (emp_first_name, emp_last_name)
+    sql_insert_emp = f"""
+        INSERT INTO {os.environ.get('DB_DEV_TABLE_EMPLOYEES')} (emp_first_name, emp_last_name)
         VALUES (:emp_first_name, :emp_last_name)
         RETURNING emp_id;
     """
@@ -98,7 +101,9 @@ async def handle_registration_details(update: Update, context: ContextTypes.DEFA
     })
 
     # שליחת בקשה לאדמין (נניח שיש אדמין אחד, role_id=1)
-    sql_get_admin = "SELECT telegram_id FROM dev_tg_users WHERE role_id = 1 LIMIT 1;"
+    sql_get_admin = f"""SELECT telegram_id 
+                        FROM {os.environ.get('DB_DEV_TABLE_TG_USERS')} 
+                        WHERE role_id = 1 LIMIT 1;"""
     admin = query_db(sql_get_admin, fetchone=True)
 
     if admin:
@@ -182,26 +187,27 @@ async def handle_admin_code_submission(update: Update, context: ContextTypes.DEF
         return
 
     role_id = int(text)
-
+    access_token = secrets.token_urlsafe(32)
     # הכנסת המשתמש לטבלת dev_tg_users
-    sql_insert_user = """
-        INSERT INTO dev_tg_users (telegram_id, role_id, created_at)
-        VALUES (:telegram_id, :role_id, NOW())
+    sql_insert_user = f"""
+        INSERT INTO {os.environ.get('DB_DEV_TABLE_TG_USERS')} (telegram_id, role_id,access_token, created_at)
+        VALUES (:telegram_id, :role_id, :access_token, NOW())
         RETURNING id;
     """
     insert_result = insert_db(
         sql_insert_user,
         parameters={
             "telegram_id": request_user_id,
-            "role_id": role_id
+            "role_id": role_id,
+            "access_token":access_token
         },
         returning=True
     )
     tg_user_id = insert_result["id"]
 
     # עדכון טבלת dev_employees עם tg_id
-    sql_update_emp = """
-        UPDATE dev_employees
+    sql_update_emp = f"""
+        UPDATE {os.environ.get('DB_DEV_TABLE_EMPLOYEES')}
         SET tg_id = :tg_id
         WHERE emp_id = :emp_id;
     """

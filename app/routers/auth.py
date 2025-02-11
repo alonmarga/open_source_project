@@ -2,6 +2,7 @@ from fastapi import Depends, HTTPException
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from app.db import query_db
 from utils.logger import setup_logger
+from typing import Optional
 
 security = HTTPBearer()
 logger = setup_logger(__name__)
@@ -15,7 +16,8 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
 
         sql = """
             SELECT u.id, u.telegram_id as tg_id, u.role_id,
-                   r.can_read, r.can_write, r.can_update, r.can_delete, r.is_admin
+                   r.can_read, r.can_write, r.can_update, r.can_delete, 
+                   r.is_admin, r.is_super
             FROM dev_tg_users u
             JOIN dev_roles r ON u.role_id = r.id
             WHERE u.access_token = :token
@@ -33,22 +35,33 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-def require_permission(permission: str):
+def require_permission(permission: str, require_super: bool = False):
     async def permission_checker(user=Depends(get_current_user)):
-        if permission == 'admin' and not user['is_admin']:
-            raise HTTPException(status_code=403, detail="Admin access required")
+        # Super admin can do everything
+        if user['is_super']:
+            return user
 
-        if not user[f'can_{permission}']:
-            raise HTTPException(
-                status_code=403,
-                detail=f"Missing required permission: {permission}"
-            )
+        # Check specific permissions
+        if permission == 'admin':
+            if require_super and not user['is_super']:
+                raise HTTPException(status_code=403, detail="Super admin access required")
+            if not user['is_admin'] and not user['is_super']:
+                raise HTTPException(status_code=403, detail="Admin access required")
+        else:
+            if not user[f'can_{permission}']:
+                # Admin can do everything except super-admin tasks
+                if not user['is_admin']:
+                    raise HTTPException(
+                        status_code=403,
+                        detail=f"Missing required permission: {permission}"
+                    )
         return user
 
     return permission_checker
 
 
 # Convenience functions for common checks
+require_super = require_permission('admin', require_super=True)
 require_admin = require_permission('admin')
 require_read = require_permission('read')
 require_write = require_permission('write')
